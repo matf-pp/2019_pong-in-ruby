@@ -4,6 +4,7 @@
 ![ruby](https://img.shields.io/badge/language-Ruby-%23ed314a.svg)
 ![gosu](https://img.shields.io/badge/library%20-Gosu-red.svg)
 
+![alt text](pong.png?raw=true "Ilustracija projekta - igra Pong")
 
 ## :pencil2: Opis projekta
 
