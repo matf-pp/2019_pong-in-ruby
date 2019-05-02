@@ -2,7 +2,7 @@
 ## Projekat u okviru kursa Programske paradigme
 
 ![ruby](https://img.shields.io/badge/language-Ruby-%23ed314a.svg)
-![gosu](https://img.shields.io/badge/library%20-Gosu-red.svg)
+![OpenGL](https://img.shields.io/badge/library%20-OpenGL-red.svg)
 
 ![alt text](pong.png?raw=true "Ilustracija projekta - igra Pong")
 
@@ -10,8 +10,8 @@
 
 Ideja projekta je implementacija jedne od najstarijih arkadnih igrica - Pong.
 Igrica će biti napravljena za dva igrača, a programirana u  programskom jeziku Ruby, na uredjaju RaspberryPI3.
-Implementacija GUI-ja bi bila izvršena pomoću biblioteke Gosu za Ruby koja je zasnovana na OpenGL-u.
-(https://www.libgosu.org)
+Implementacija GUI-ja je izvršena pomoću biblioteke OpenGl.
+(https://www.opengl.org/)
 
 ## :video_game: Komande 
 
