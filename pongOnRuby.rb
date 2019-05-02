@@ -1,0 +1,167 @@
+# OPENGL Gems
+require 'opengl'
+require 'glu'
+require 'glut'
+require 'serialport'
+
+include Gl,Glu,Glut
+
+# Separating line constants
+SEPARATING_LINE_WIDTH = 0.025
+SEPARATING_LINE_HEIGHT = 5
+
+# Ball constants
+BALL_RADIUS = 0.1
+BALL_SEGMENTS = 30
+
+# Player rectangle constants
+PLAYER_RECT_WIDTH = 0.1
+PLAYER_RECT_HEIGHT = 0.4
+
+# Borders for player 1
+BORDER_BACK_1 = -4.5
+BORDER_FORWARD_1 = -0.5
+BORDER_UP_1 = 2
+BORDER_DOWN_1 = -2 
+
+# Borders for player 2
+BORDER_BACK_2 = 4.5
+BORDER_FORWARD_2 = 0.5
+BORDER_UP_2 = 2
+BORDER_DOWN_2 = -2 
+
+# Movement steps
+STEP = 0.15
+BALL_STEP = 0.023
+
+# Constants for calculating data from USB
+LEFT_MOVE = 432
+RIGHT_MOVE = 592
+UP_MOVE = 592
+DOWN_MOVE = 432
+
+# Player positions
+$player1X = -3.0
+$player1Y = 0.0
+$player2X = 3.0
+$player2Y = 0.0
+
+# Ball position
+$ballPositionX = 0
+$ballPositionY = 0
+$ballDirectionAngle = 0.785
+
+def initialize
+    glClearColor(0.0, 0.0, 0.0, 0.0)
+    glEnable(GL_DEPTH_TEST)
+end
+
+display = Proc.new do
+  glClear(GL_COLOR_BUFFER_BIT)
+
+  #Drawing middle separating line 
+  glColor(1, 1, 1)
+  glBegin(GL_POLYGON)
+    glVertex3f(-SEPARATING_LINE_WIDTH, -SEPARATING_LINE_HEIGHT, 0)
+    glVertex3f(SEPARATING_LINE_WIDTH, -SEPARATING_LINE_HEIGHT, 0)
+    glVertex3f(SEPARATING_LINE_WIDTH, SEPARATING_LINE_HEIGHT, 0)
+    glVertex3f(-SEPARATING_LINE_WIDTH, SEPARATING_LINE_HEIGHT, 0)
+  glEnd()
+
+  #Drawing player 1 
+  glColor(1,0,0)
+  glBegin(GL_POLYGON)
+    glVertex3f($player1X - PLAYER_RECT_WIDTH, $player1Y + PLAYER_RECT_HEIGHT, 0) # Top left
+    glVertex3f($player1X + PLAYER_RECT_WIDTH, $player1Y + PLAYER_RECT_HEIGHT, 0) # Top right
+    glVertex3f($player1X + PLAYER_RECT_WIDTH, $player1Y - PLAYER_RECT_HEIGHT, 0) # Bottom right
+    glVertex3f($player1X - PLAYER_RECT_WIDTH, $player1Y - PLAYER_RECT_HEIGHT, 0) # Bottom left
+  glEnd()
+
+  #Drawing player 2 
+  glColor(0,0,1)
+  glBegin(GL_POLYGON)
+    glVertex3f($player2X - PLAYER_RECT_WIDTH, $player2Y + PLAYER_RECT_HEIGHT, 0) # Top left
+    glVertex3f($player2X + PLAYER_RECT_WIDTH, $player2Y + PLAYER_RECT_HEIGHT, 0) # Top right
+    glVertex3f($player2X + PLAYER_RECT_WIDTH, $player2Y - PLAYER_RECT_HEIGHT, 0) # Bottom right
+    glVertex3f($player2X - PLAYER_RECT_WIDTH, $player2Y - PLAYER_RECT_HEIGHT, 0) # Bottom left
+  glEnd()
+
+  #Drawing ball
+  glColor(0,1,0)
+  glBegin(GL_POLYGON)
+    for i in 0...BALL_SEGMENTS do
+      theta = 6.28 * i.to_f / BALL_SEGMENTS.to_f
+      x = BALL_RADIUS * Math.cos(theta)
+      y = BALL_RADIUS * Math.sin(theta)
+      glVertex3f($ballPositionX + x, $ballPositionY + y, 0)
+    end
+  glEnd()
+
+  glutSwapBuffers()
+end
+
+reshape = Proc.new do |w, h|
+    glViewport(0, 0,  w,  h)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(60.0,  w.to_f/h.to_f, 1.0, 20.0)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+end
+
+keyboard = Proc.new do |key, x, y|
+    case (key)
+      when ?w
+        if $player1Y + STEP <= BORDER_UP_1
+            $player1Y += STEP
+        end
+        glutPostRedisplay()
+      when ?s
+        if $player1Y - STEP >= BORDER_DOWN_1
+            $player1Y -= STEP
+        end
+        glutPostRedisplay()
+      when ?d
+        if $player1X + STEP <= BORDER_FORWARD_1
+            $player1X += STEP
+        end
+        glutPostRedisplay()
+      when ?a
+        if $player1X - STEP >= BORDER_BACK_1
+            $player1X -= STEP
+        end
+        glutPostRedisplay()
+      when ?i
+        if $player2Y + STEP <= BORDER_UP_2
+            $player2Y += STEP
+        end
+        glutPostRedisplay()
+      when ?k
+        if $player2Y - STEP >= BORDER_DOWN_2
+            $player2Y -= STEP
+        end
+        glutPostRedisplay()
+      when ?l
+        if $player2X + STEP <= BORDER_BACK_2
+            $player2X += STEP
+        end
+        glutPostRedisplay()
+      when ?j
+        if $player2X - STEP >= BORDER_FORWARD_2
+            $player2X -= STEP
+        end
+        glutPostRedisplay()
+    end
+end
+
+glutInit
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB)
+glutInitWindowSize(1200, 800)
+glutInitWindowPosition(100, 100)
+glutCreateWindow($0)
+initialize()
+glutDisplayFunc(display)
+glutReshapeFunc(reshape)
+glutKeyboardFunc(keyboard)
+glutMainLoop()
