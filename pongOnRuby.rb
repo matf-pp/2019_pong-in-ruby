@@ -51,6 +51,60 @@ $ballPositionX = 0
 $ballPositionY = 0
 $ballDirectionAngle = 0.785
 
+# Players score
+$player1Wins = 0
+$player2Wins = 0
+
+# Additional consts
+CONTACT_DIFFERENCE = PLAYER_RECT_WIDTH*0.5 + BALL_RADIUS
+HEIGHT_DIFFERENCE = PLAYER_RECT_HEIGHT*0.5 + BALL_RADIUS
+TOTAL_WINS = 3
+
+$connection = SerialPort.open("/dev/ttyArduino")
+
+serialPort = Thread.new {
+  # Flushing input buffer before using
+  if($connection.flush_input == false)
+      puts 'Error: flush_input'
+  end
+
+  while true
+      lineIn = $connection.gets.to_s
+
+      coordinatesReceived = lineIn.split(';')
+      #puts "#{coordinatesReceived[1]}  #{coordinatesReceived[2]}  #{coordinatesReceived[4]}  #{coordinatesReceived[5]} "
+      if coordinatesReceived.size == 0
+          next
+      end
+
+      # Move first player
+      if coordinatesReceived[1].to_f < LEFT_MOVE && $player1X - STEP >= BORDER_BACK_1
+          $player1X -= STEP
+      elsif coordinatesReceived[1].to_f > RIGHT_MOVE && $player1X + STEP <= BORDER_FORWARD_1
+          $player1X += STEP
+      end
+      if coordinatesReceived[2].to_f < DOWN_MOVE && $player1Y - STEP >= BORDER_DOWN_1
+          $player1Y -= STEP
+      elsif coordinatesReceived[2].to_f > UP_MOVE && $player1Y + STEP <= BORDER_UP_1
+          $player1Y += STEP
+      end
+
+      # Move second player
+      if coordinatesReceived[4].to_f < LEFT_MOVE && $player2X - STEP >= BORDER_FORWARD_2
+          $player2X -= STEP
+      elsif coordinatesReceived[4].to_f > RIGHT_MOVE && $player2X + STEP <= BORDER_BACK_2
+          $player2X += STEP
+      end
+      if coordinatesReceived[5].to_f < DOWN_MOVE && $player2Y - STEP >= BORDER_DOWN_2
+          $player2Y -= STEP
+      elsif coordinatesReceived[5].to_f > UP_MOVE && $player2Y + STEP <= BORDER_UP_2
+          $player2Y += STEP
+      end
+  
+      sleep(0.1)
+  end
+}
+
 def initialize
     glClearColor(0.0, 0.0, 0.0, 0.0)
     glEnable(GL_DEPTH_TEST)
