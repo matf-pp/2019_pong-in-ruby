@@ -63,46 +63,46 @@ TOTAL_WINS = 3
 $connection = SerialPort.open("/dev/ttyArduino")
 
 serialPort = Thread.new {
-  # Flushing input buffer before using
-  if($connection.flush_input == false)
-      puts 'Error: flush_input'
-  end
+    # Flushing input buffer before using
+    if($connection.flush_input == false)
+        puts 'Error: flush_input'
+    end
 
-  while true
-      lineIn = $connection.gets.to_s
+    while true
+        lineIn = $connection.gets.to_s
 
-      coordinatesReceived = lineIn.split(';')
-      #puts "#{coordinatesReceived[1]}  #{coordinatesReceived[2]}  #{coordinatesReceived[4]}  #{coordinatesReceived[5]} "
-      if coordinatesReceived.size == 0
-          next
-      end
+        coordinatesReceived = lineIn.split(';')
+        #puts "#{coordinatesReceived[1]}  #{coordinatesReceived[2]}  #{coordinatesReceived[4]}  #{coordinatesReceived[5]} "
+        if coordinatesReceived.size == 0
+            next
+        end
 
-      # Move first player
-      if coordinatesReceived[1].to_f < LEFT_MOVE && $player1X - STEP >= BORDER_BACK_1
-          $player1X -= STEP
-      elsif coordinatesReceived[1].to_f > RIGHT_MOVE && $player1X + STEP <= BORDER_FORWARD_1
-          $player1X += STEP
-      end
-      if coordinatesReceived[2].to_f < DOWN_MOVE && $player1Y - STEP >= BORDER_DOWN_1
-          $player1Y -= STEP
-      elsif coordinatesReceived[2].to_f > UP_MOVE && $player1Y + STEP <= BORDER_UP_1
-          $player1Y += STEP
-      end
+        # Move first player
+        if coordinatesReceived[1].to_f < LEFT_MOVE && $player1X - STEP >= BORDER_BACK_1
+            $player1X -= STEP
+        elsif coordinatesReceived[1].to_f > RIGHT_MOVE && $player1X + STEP <= BORDER_FORWARD_1
+            $player1X += STEP
+        end
+        if coordinatesReceived[2].to_f < DOWN_MOVE && $player1Y - STEP >= BORDER_DOWN_1
+            $player1Y -= STEP
+        elsif coordinatesReceived[2].to_f > UP_MOVE && $player1Y + STEP <= BORDER_UP_1
+            $player1Y += STEP
+        end
 
-      # Move second player
-      if coordinatesReceived[4].to_f < LEFT_MOVE && $player2X - STEP >= BORDER_FORWARD_2
-          $player2X -= STEP
-      elsif coordinatesReceived[4].to_f > RIGHT_MOVE && $player2X + STEP <= BORDER_BACK_2
-          $player2X += STEP
-      end
-      if coordinatesReceived[5].to_f < DOWN_MOVE && $player2Y - STEP >= BORDER_DOWN_2
-          $player2Y -= STEP
-      elsif coordinatesReceived[5].to_f > UP_MOVE && $player2Y + STEP <= BORDER_UP_2
-          $player2Y += STEP
-      end
-  
-      sleep(0.1)
-  end
+        # Move second player
+        if coordinatesReceived[4].to_f < LEFT_MOVE && $player2X - STEP >= BORDER_FORWARD_2
+            $player2X -= STEP
+        elsif coordinatesReceived[4].to_f > RIGHT_MOVE && $player2X + STEP <= BORDER_BACK_2
+            $player2X += STEP
+        end
+        if coordinatesReceived[5].to_f < DOWN_MOVE && $player2Y - STEP >= BORDER_DOWN_2
+            $player2Y -= STEP
+        elsif coordinatesReceived[5].to_f > UP_MOVE && $player2Y + STEP <= BORDER_UP_2
+            $player2Y += STEP
+        end
+    
+        sleep(0.1)
+    end
 }
 
 def initialize
@@ -151,6 +151,14 @@ display = Proc.new do
     end
   glEnd()
 
+  glColor(1,0,0)
+  glRasterPos3f(-1,2.3,0)
+  glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 48 + $player1Wins);
+
+  glColor(0,0,1)
+  glRasterPos3f(1,2.3,0)
+  glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 48 + $player2Wins);
+
   glutSwapBuffers()
 end
 
@@ -162,6 +170,63 @@ reshape = Proc.new do |w, h|
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+end
+
+animation = Proc.new do |s|
+
+  if $player2Wins == TOTAL_WINS
+    sleep(2)
+    exit(0)
+  end
+
+  if $player1Wins == TOTAL_WINS
+    sleep(2)
+    exit(0)
+  end
+
+  if $ballPositionX <= BORDER_BACK_1 
+    $player2Wins += 1
+    $ballPositionX = 0
+    $ballPositionY = 0
+    $ballDirectionAngle = 0.785
+  end
+
+  if $ballPositionX >= BORDER_BACK_2 
+    $player1Wins += 1
+    $ballPositionX = 0
+    $ballPositionY = 0
+    $ballDirectionAngle = 0.785
+  end
+
+  # Contact ball with Player1
+  $ballPositionX - BALL_RADIUS - $player1X 
+  if ($ballPositionX - $player1X).abs <= CONTACT_DIFFERENCE
+    if ($ballPositionY-$player1Y).abs <= HEIGHT_DIFFERENCE
+      $ballDirectionAngle = 3.14 - $ballDirectionAngle
+    end
+  end
+
+  # Contact ball with Player2
+  if ($player2X - $ballPositionX).abs <= CONTACT_DIFFERENCE
+    if ($ballPositionY-$player2Y).abs <= HEIGHT_DIFFERENCE
+      $ballDirectionAngle = 3.14 - $ballDirectionAngle
+    end
+  end
+
+  if $ballPositionY >= BORDER_UP_1 
+    $ballDirectionAngle = 6.28 - $ballDirectionAngle
+  end
+
+  if $ballPositionY <= BORDER_DOWN_1 
+    $ballDirectionAngle = 6.28 - $ballDirectionAngle
+  end
+
+
+  $ballPositionX += Math.cos($ballDirectionAngle)*BALL_STEP
+  $ballPositionY += Math.sin($ballDirectionAngle)*BALL_STEP
+
+  glutPostRedisplay()
+  glutTimerFunc(5, animation, 0)
 end
 
 keyboard = Proc.new do |key, x, y|
@@ -206,6 +271,9 @@ keyboard = Proc.new do |key, x, y|
             $player2X -= STEP
         end
         glutPostRedisplay()
+      when ?x 
+        Thread.kill(serialPort)
+        exit(0)
     end
 end
 
@@ -218,4 +286,5 @@ initialize()
 glutDisplayFunc(display)
 glutReshapeFunc(reshape)
 glutKeyboardFunc(keyboard)
+glutTimerFunc(5,animation, 0)
 glutMainLoop()
